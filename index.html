@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Food Menu App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; background:#f9f9f9; color:#333; }
+    header { text-align:center; padding:1rem; background:#ff7043; color:white; font-size:1.4rem; font-weight:bold; }
+
+    .screen { display:none; padding:1rem; min-height:calc(100vh - 60px); }
+    .active { display:block; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    input { width:100%; padding:0.7rem; margin:0.5rem 0; border:1px solid #ccc; border-radius:8px; }
+    button { padding:0.6rem 1.2rem; border:none; border-radius:8px; background:#ff7043; color:white; cursor:pointer; }
+    button:hover { background:#e64a19; }
+
+    /* BMI Result */
+    .bmi-result { text-align:center; font-size:1.2rem; padding:2rem; }
+
+    /* Diet Choice */
+    .diet-choice { display:flex; flex-direction:column; gap:1rem; margin-top:2rem; }
+    .diet-box { padding:2rem; border-radius:12px; background:white; box-shadow:0 4px 10px rgba(0,0,0,0.1); text-align:center; font-size:1.4rem; cursor:pointer; }
+    .diet-box:hover { transform:scale(1.03); transition:0.3s; background:#ffe0d1; }
+
+    /* Tabs */
+    .tabs { display:flex; justify-content:space-around; margin-bottom:1rem; }
+    .tab { padding:0.6rem 1rem; border-radius:20px; background:#ddd; cursor:pointer; }
+    .tab.active { background:#ff7043; color:white; }
+
+    /* Food Cards */
+    .food-card { background:white; border-radius:10px; margin:0.6rem 0; box-shadow:0 2px 6px rgba(0,0,0,0.1); overflow:hidden; }
+    .food-row { display:flex; align-items:center; padding:0.8rem; }
+    .food-card img { width:60px; height:60px; border-radius:8px; object-fit:cover; margin-right:1rem; }
+    .food-info { flex:1; }
+    .food-info h3 { margin:0; font-size:1rem; }
+    .price { font-weight:bold; margin-top:0.2rem; }
+    .food-row button { padding:0.4rem 0.8rem; font-size:0.8rem; border-radius:6px; }
+
+    /* Toggle Description */
+    .desc { display:none; padding:0.6rem 1rem; font-size:0.9rem; color:#555; background:#fafafa; border-top:1px solid #eee; }
+    .toggle-btn { cursor:pointer; font-size:0.9rem; color:#555; display:flex; justify-content:flex-end; padding:0.3rem 0.8rem; }
+
+    /* Cart Bar */
+    .cart-bar { background:#ff7043; color:white; position:fixed; bottom:0; left:0; right:0; display:flex; justify-content:space-between; padding:1rem; align-items:center; cursor:pointer; }
+    .cart-bar span { font-weight:bold; }
+
+    /* Cart Popup */
+    .cart-popup { position:fixed; top:0; left:0; right:0; bottom:0; background:white; z-index:10; padding:1rem; display:none; flex-direction:column; }
+    .cart-popup.active { display:flex; animation:fadeIn 0.4s; }
+    .nutrition-table { border-collapse:collapse; width:100%; margin-bottom:1rem; }
+    .nutrition-table th, .nutrition-table td { border:1px solid #ddd; padding:0.6rem; text-align:center; }
+    .nutrition-table th { background:#ff7043; color:white; }
+    .cart-items { flex:1; overflow:auto; margin-bottom:1rem; }
+    .cart-item { display:flex; align-items:center; justify-content:space-between; padding:0.6rem; border-bottom:1px solid #eee; }
+    .cart-item img { width:40px; height:40px; border-radius:6px; margin-right:0.6rem; }
+    .cart-info { flex:1; }
+    .qty-controls { display:flex; align-items:center; gap:0.4rem; }
+    .qty-btn { background:#eee; padding:0.3rem 0.6rem; border-radius:6px; cursor:pointer; }
+    .cart-total { font-size:1.1rem; font-weight:bold; text-align:right; margin-top:1rem; }
+    .close-cart { background:#ddd; color:#333; margin-top:1rem; }
+  </style>
+</head>
+<body>
+  <header>🍽 Food Menu App</header>
+
+  <!-- Screen 1: BMI Form -->
+  <div id="screen1" class="screen active">
+    <h2>Enter your details</h2>
+    <input type="number" id="age" placeholder="Age">
+    <input type="number" id="height" placeholder="Height (cm)">
+    <input type="number" id="weight" placeholder="Weight (kg)">
+    <button onclick="calculateBMI()">Calculate</button>
+  </div>
+
+  <!-- Screen 2: BMI Result -->
+  <div id="screen2" class="screen">
+    <div class="bmi-result" id="bmiResult"></div>
+    <button onclick="gotoScreen(3)">Continue</button>
+  </div>
+
+  <!-- Screen 3: Diet Choice -->
+  <div id="screen3" class="screen">
+    <h2>Select Diet Preference</h2>
+    <div class="diet-choice">
+      <div class="diet-box" onclick="selectDiet('veg')">🥗 Vegetarian</div>
+      <div class="diet-box" onclick="selectDiet('non-veg')">🍗 Non-Vegetarian</div>
+    </div>
+  </div>
+
+  <!-- Screen 4: Menu -->
+  <div id="screen4" class="screen">
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('main',event)">Main Course</div>
+      <div class="tab" onclick="showTab('breads',event)">Breads</div>
+      <div class="tab" onclick="showTab('sides',event)">Sides</div>
+      <div class="tab" onclick="showTab('drinks',event)">Drinks</div>
+    </div>
+    <div id="foodItems"></div>
+  </div>
+
+  <!-- Cart Bar -->
+  <div id="cartBar" class="cart-bar" style="display:none;" onclick="openCart()">
+    <span id="cartCount">0 items</span>
+    <span>View Cart 🛒</span>
+  </div>
+
+  <!-- Cart Popup -->
+  <div id="cartPopup" class="cart-popup">
+    <h2>Your Cart</h2>
+    <table class="nutrition-table" id="nutritionTable"></table>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-total" id="cartTotal"></div>
+    <button class="close-cart" onclick="closeCart()">Close</button>
+  </div>
+
+  <script>
+    let foodData = {
+      main: [
+        { name:"Grilled Chicken", desc:"Juicy grilled chicken breast with spices and herbs", img:"https://lh3.googleusercontent.com/gps-cs-s/AC9h4noxTYxSay9G6r5XXbrN3PPnZyg3I_AKPDBuGSKNByzWsf12CpaSocKgeqpPiJavmybC0fOKzOtjaV2mtfsjkajezxks_uF6ZOVEtfg6DJhfuM1tj5rX-QNPCU7TTATMbrRnoi3S=w325-h218-n-k-no", price:250, weight:200, protein:30, carbs:5, cal:250 },
+        { name:"Paneer Curry", desc:"Spicy Indian cottage cheese curry with tomato gravy", img:"https://source.unsplash.com/60x60/?paneer", price:200, weight:180, protein:20, carbs:10, cal:220 }
+      ],
+      breads: [
+        { name:"Butter Naan", desc:"Soft and fluffy Indian bread with butter glaze", img:"https://source.unsplash.com/60x60/?naan", price:50, weight:100, protein:8, carbs:40, cal:250 }
+      ],
+      sides: [
+        { name:"Garden Salad", desc:"Fresh mix of greens and vegetables", img:"https://source.unsplash.com/60x60/?salad", price:80, weight:120, protein:3, carbs:8, cal:60 }
+      ],
+      drinks: [
+        { name:"Lassi", desc:"Refreshing yogurt-based drink", img:"https://source.unsplash.com/60x60/?lassi", price:90, weight:200, protein:6, carbs:30, cal:180 }
+      ]
+    };
+
+    let cart = [];
+    let selectedDiet = "";
+
+    function gotoScreen(n){
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+      document.getElementById("screen"+n).classList.add('active');
+    }
+
+    function calculateBMI(){
+      let h = document.getElementById('height').value/100;
+      let w = document.getElementById('weight').value;
+      if(!h || !w) return;
+      let bmi = (w/(h*h)).toFixed(1);
+      let calories = (w*30).toFixed(0);
+      let protein = (w*1.5).toFixed(0);
+      let carbs = (w*4).toFixed(0);
+      document.getElementById('bmiResult').innerHTML = `
+        <h2>Your BMI: ${bmi}</h2>
+        <p>Recommended Daily Intake:</p>
+        <p>🍽 ${calories} Calories</p>
+        <p>🥩 ${protein}g Protein</p>
+        <p>🥔 ${carbs}g Carbs</p>
+      `;
+      gotoScreen(2);
+    }
+
+    function selectDiet(type){
+      selectedDiet = type;
+      gotoScreen(4);
+      showTab('main');
+    }
+
+    function showTab(category,ev){
+      document.querySelectorAll('.tab').forEach(tab=>tab.classList.remove('active'));
+      if(ev) ev.target.classList.add('active');
+      let container=document.getElementById('foodItems');
+      container.innerHTML="";
+      foodData[category].forEach((item,idx)=>{
+        let card=document.createElement('div');
+        card.className="food-card";
+        card.innerHTML=`
+          <div class="food-row">
+            <img src="${item.img}">
+            <div class="food-info">
+              <h3>${item.name}</h3>
+              <p class="price">₹${item.price}</p>
+              <small>${item.weight}g | P:${item.protein}g | C:${item.carbs}g | Cal:${item.cal}</small>
+            </div>
+            <button onclick='addToCart(${JSON.stringify(item)})'>Add</button>
+          </div>
+          <div class="toggle-btn" onclick="toggleDesc(this)">⬇️</div>
+          <div class="desc">${item.desc}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function toggleDesc(el){
+      let desc = el.nextElementSibling;
+      desc.style.display = desc.style.display==="block" ? "none":"block";
+    }
+
+    function addToCart(item){
+      let existing = cart.find(c=>c.name===item.name);
+      if(existing){ existing.qty +=1; }
+      else { item.qty=1; cart.push(item); }
+      document.getElementById('cartBar').style.display="flex";
+      document.getElementById('cartCount').innerText=`${cart.reduce((a,b)=>a+b.qty,0)} items`;
+    }
+
+    function openCart(){
+      document.getElementById('cartPopup').classList.add('active');
+      renderCart();
+    }
+
+    function closeCart(){
+      document.getElementById('cartPopup').classList.remove('active');
+    }
+
+    function updateQty(name,change){
+      let item = cart.find(c=>c.name===name);
+      if(!item) return;
+      item.qty += change;
+      if(item.qty<=0) cart=cart.filter(c=>c.name!==name);
+      renderCart();
+      document.getElementById('cartCount').innerText=`${cart.reduce((a,b)=>a+b.qty,0)} items`;
+      if(cart.length===0) document.getElementById('cartBar').style.display="none";
+    }
+
+    function renderCart(){
+      let list=document.getElementById('cartItems');
+      list.innerHTML="";
+      let totalPrice=0,totalW=0,totalP=0,totalC=0,totalCal=0;
+      cart.forEach(c=>{
+        totalPrice+=c.price*c.qty;
+        totalW+=c.weight*c.qty;
+        totalP+=c.protein*c.qty;
+        totalC+=c.carbs*c.qty;
+        totalCal+=c.cal*c.qty;
+        list.innerHTML+=`
+          <div class="cart-item">
+            <img src="${c.img}">
+            <div class="cart-info">
+              <strong>${c.name}</strong><br>₹${c.price}
+            </div>
+            <div class="qty-controls">
+              <span class="qty-btn" onclick="updateQty('${c.name}',-1)">-</span>
+              <span>${c.qty}</span>
+              <span class="qty-btn" onclick="updateQty('${c.name}',1)">+</span>
+            </div>
+          </div>
+        `;
+      });
+      document.getElementById('nutritionTable').innerHTML=`
+        <tr><th>Weight</th><th>Protein</th><th>Carbs</th><th>Calories</th></tr>
+        <tr><td>${totalW}g</td><td>${totalP}g</td><td>${totalC}g</td><td>${totalCal}</td></tr>
+      `;
+      document.getElementById('cartTotal').innerHTML=`Total Price: ₹${totalPrice}`;
+    }
+  </script>
+</body>
+</html>
