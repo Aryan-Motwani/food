@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Database Pro | Management</title>
+    <!-- Replace your entire <script type="module"> block with this: -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  // Your config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDEJcIitHnHgwyTzFwkT5lxOQp3Np71Dms",
+    authDomain: "tree-form-9835a.firebaseapp.com",
+    databaseURL: "https://tree-form-9835a-default-rtdb.firebaseio.com",
+    projectId: "tree-form-9835a",
+    storageBucket: "tree-form-9835a.firebasestorage.app",
+    messagingSenderId: "557591771590",
+    appId: "1:557591771590:web:3aa7bb4cd4f4b2df169ac7"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  window.db = firebase.firestore();  // ✅ Now works globally
+</script>
+
+
     <style>
         :root {
             --primary: #4f46e5;
@@ -382,32 +402,58 @@
         let searchResults = [];
         let searchMode = false;
 
-        document.addEventListener('DOMContentLoaded', function() {
-            loadDatabase();
-            if (Object.keys(database).length === 0) {
-                initSampleData();
-                saveDatabase();
-            }
-            showSurnames();
-            updateRelativesDropdown();
-        });
+        document.addEventListener('DOMContentLoaded', async function() {
+    await loadDatabase();  // Now async
+    if (Object.keys(database).length === 0) {
+        initSampleData();
+        await saveDatabase();  // Now async
+    }
+    showSurnames();
+});
+
 
         function initSampleData() {
-            database = {
-                "Patel": {
-                    "Sharma Family": {
-                        "House A": [
-                            { id: 1, surname: "Patel", firstname: "Raj", name: "Raj Patel", gender: "Male", photo: "", dob: "1980-05-15", house: "House A", family: "Sharma Family", relatives: ["2"], relation: "Husband" },
-                            { id: 2, surname: "Patel", firstname: "Priya", name: "Priya Patel", gender: "Female", photo: "", dob: "1982-08-22", house: "House A", family: "Sharma Family", relatives: ["1"], relation: "Wife" }
-                        ],
-                        "House B": [
-                            { id: 3, surname: "Patel", firstname: "Amit", name: "Amit Patel", gender: "Male", photo: "", dob: "2005-03-10", house: "House B", family: "Sharma Family", relatives: ["1","2"], relation: "Son" }
-                        ]
+    database = {
+        "Patel": {
+            "Sharma Family": {
+                "House A": [
+                    { 
+                        id: 1, surname: "Patel", firstname: "Raj", name: "Raj Patel", 
+                        gender: "Male", photo: "", dob: "1980-05-15", 
+                        house: "House A", family: "Sharma Family", 
+                        relation: "Husband",
+                        relatives: [  // ✅ Fixed: Array of OBJECTS
+                            { id: 2, name: "Priya Patel", family: "Sharma Family", relation: "Wife" }
+                        ] 
+                    },
+                    { 
+                        id: 2, surname: "Patel", firstname: "Priya", name: "Priya Patel", 
+                        gender: "Female", photo: "", dob: "1982-08-22", 
+                        house: "House A", family: "Sharma Family", 
+                        relation: "Wife",
+                        relatives: [  
+                            { id: 1, name: "Raj Patel", family: "Sharma Family", relation: "Husband" }
+                        ] 
                     }
-                }
-            };
-            allPersons = flattenPersons(database);
+                ],
+                "House B": [
+                    { 
+                        id: 3, surname: "Patel", firstname: "Amit", name: "Amit Patel", 
+                        gender: "Male", photo: "", dob: "2005-03-10", 
+                        house: "House B", family: "Sharma Family", 
+                        relation: "Son",
+                        relatives: [  // ✅ Fixed
+                            { id: 1, name: "Raj Patel", family: "Sharma Family", relation: "Father" },
+                            { id: 2, name: "Priya Patel", family: "Sharma Family", relation: "Mother" }
+                        ] 
+                    }
+                ]
+            }
         }
+    };
+    allPersons = flattenPersons(database);
+}
+
 
         function flattenPersons(db) {
             let persons = [];
@@ -421,18 +467,48 @@
             return persons;
         }
 
-        function saveDatabase() {
-            localStorage.setItem('familyDatabase', JSON.stringify(database));
-            allPersons = flattenPersons(database);
-        }
+        // Add after variable declarations
+        // let database = {};
+        // let allPersons = [];
 
-        function loadDatabase() {
-            const saved = localStorage.getItem('familyDatabase');
-            if (saved) {
-                database = JSON.parse(saved);
+        // Firebase database functions
+       async function saveDatabase() {
+            try {
+                await window.db.collection('familyDatabase').doc('main').set(database);
                 allPersons = flattenPersons(database);
+                console.log('✅ Saved to Firebase');
+            } catch (error) {
+                console.error('❌ Save failed:', error);
             }
         }
+
+        async function loadDatabase() {
+            try {
+                const docSnap = await window.db.collection('familyDatabase').doc('main').get();
+                if (docSnap.exists) {
+                    database = docSnap.data();
+                    allPersons = flattenPersons(database);
+                    console.log('✅ Loaded from Firebase');
+                }
+            } catch (error) {
+                console.error('❌ Load failed:', error);
+            }
+        }
+
+
+
+        // function saveDatabase() {
+        //     localStorage.setItem('familyDatabase', JSON.stringify(database));
+        //     allPersons = flattenPersons(database);
+        // }
+
+        // function loadDatabase() {
+        //     const saved = localStorage.getItem('familyDatabase');
+        //     if (saved) {
+        //         database = JSON.parse(saved);
+        //         allPersons = flattenPersons(database);
+        //     }
+        // }
 
         function createInitials(name) {
             return name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
@@ -657,7 +733,7 @@
             ).join('');
         }
 
-        document.getElementById('personForm').addEventListener('submit', function(e) {
+        document.getElementById('personForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = {
                 id: document.getElementById('editId').value ? parseInt(document.getElementById('editId').value) : Date.now(),
@@ -684,7 +760,7 @@
                 database[surname][formData.family][formData.house].push(formData);
             }
 
-            saveDatabase();
+            await saveDatabase();
             closeModal();
             showPersons(formData.surname, formData.family, formData.house);
         });
@@ -717,19 +793,19 @@
             document.getElementById('dob').value = person.dob || '';
             document.getElementById('house').value = person.house;
             document.getElementById('family').value = person.family;
-            document.getElementById('relation').value = person.relation || '';
+            document.getElementById('relationSelect').value = person.relation || '';
             document.getElementById('editId').value = person.id;
             document.getElementById('personModal').style.display = 'block';
         }
 
         function confirmDelete(id, name) {
             document.getElementById('deleteName').textContent = name;
-            document.getElementById('confirmDelete').onclick = () => {
+            document.getElementById('confirmDelete').onclick = async () => {
                 const person = allPersons.find(p => p.id === id);
                 const list = database[person.surname][person.family][person.house];
                 const idx = list.findIndex(p => p.id === id);
                 list.splice(idx, 1);
-                saveDatabase();
+                await saveDatabase();
                 closeDeleteModal();
                 showPersons(person.surname, person.family, person.house);
             };
@@ -799,5 +875,6 @@ function toggleRelatives(id) {
 
 
     </script>
+    
 </body>
 </html>
