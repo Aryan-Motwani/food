@@ -272,6 +272,110 @@
             .top-tools { grid-template-columns: 1fr; }
             .person-grid { grid-template-columns: 1fr; }
         }
+
+        /* ✅ MOBILE SUPERCHARGED */
+@media (max-width: 768px) {
+    body { padding: 20px 10px; }
+    .container { max-width: 100%; }
+    
+    .header-title h1 { font-size: 1.5rem; }
+    .top-tools { grid-template-columns: 1fr; gap: 12px; }
+    
+    .content-grid { 
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+        gap: 12px; 
+    }
+    
+    .card { padding: 16px; }
+    .avatar-circle { width: 56px; height: 56px; font-size: 1.1rem; }
+    
+    .person-grid { grid-template-columns: 1fr; gap: 16px; }
+    .person-card { margin-bottom: 16px; }
+    
+    /* FAB Button Mobile */
+    .add-btn { 
+        width: 56px; height: 56px; 
+        bottom: 20px; right: 20px; 
+        font-size: 22px;
+    }
+    
+    /* Modal Mobile */
+    .modal-content { 
+        margin: 10px; width: calc(100% - 20px); 
+        padding: 24px 20px; 
+        max-height: 90vh; overflow-y: auto;
+    }
+    
+    /* Form Mobile */
+    .form-group input, .form-group select { 
+        font-size: 16px; /* Prevents zoom */
+        padding: 14px 12px;
+    }
+    
+    /* Touch Targets */
+    .action-btn, button { 
+        min-height: 44px; /* iOS Touch Target */
+        font-size: 16px;
+    }
+}
+
+/* Safe Area for iPhone Notch */
+@supports (padding: max(0px)) {
+    body { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+}
+
+/* ✅ FIX SAVE BUTTON - Mobile Critical */
+.btn-group { 
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 12px; 
+    margin-top: 32px;
+    position: sticky;      /* 🔑 NEW */
+    bottom: 0;             /* 🔑 NEW */
+    background: white;     /* 🔑 NEW */
+    padding: 16px 0;       /* 🔑 NEW */
+    border-top: 1px solid #f1f5f9; /* 🔑 NEW */
+    width: 100%;           /* 🔑 NEW */
+}
+
+.modal-content {
+    margin: 5vh auto; 
+    padding: 32px 32px 80px 32px;  /* ✅ Extra bottom padding */
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Mobile Button Safety */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: row;
+        position: fixed;        /* 🔑 MOBILE FIXED */
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 16px 20px;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+        z-index: 1001;
+        margin: 0;
+    }
+    
+    .modal-content {
+        padding-bottom: 120px;  /* Space for fixed button */
+        margin-bottom: 80px;
+    }
+    
+    /* Full-width buttons mobile */
+    .btn-main {
+        flex: 1;
+        min-height: 48px;
+        font-size: 16px;  /* Prevents zoom */
+    }
+}
+
+
     </style>
 </head>
 <body>
@@ -342,42 +446,49 @@
                         <input type="text" id="family" required>
                     </div>
                 </div>
-    <div style="display:grid; grid-template-columns: 1fr 2fr; gap:12px;">
+    <!-- REPLACE this broken section in your modal (around line 200): -->
+<div style="display:grid; grid-template-columns: 1fr 2fr; gap:12px;">
     <div class="form-group">
         <label>Relation</label>
-        <select id="relationSelect">  <!-- ✅ Already correct -->
+        <select id="relationSelect">
             <option value="">Select</option>
             <option>Mother</option>
+            <option>Father</option>
             <option>Brother</option>
             <option>Sister</option>
-            <option>Mama</option>
-            <option>Mami</option>
-            <option>Uncle</option>
-            <option>Aunt</option>
             <option>Son</option>
             <option>Daughter</option>
+            <option>Uncle</option>
+            <option>Aunt</option>
+            <option>Mama</option>
+            <option>Mami</option>
         </select>
     </div>
-
- <div class="form-group">
+    <div class="form-group">
         <label>Relative</label>
-        <input type="text" id="relativeSearch" placeholder="Search name..." oninput="filterRelatives()">
-        <select id="relativeSelect" size="4" style="width:100%; margin-top:4px;">
-        <select id="relativeSelect" size="4" style="width:100%; margin-top:4px;"></select>  <!-- ✅ Add style -->
-
+        <input type="text" id="relativeSearch" placeholder="🔍 Search relatives..." oninput="filterRelatives()">
+        <select id="relativeSelect" size="3" style="width:100%; margin-top:4px; font-size:14px;"></select>
     </div>
 </div>
 
+<!-- ✅ ADD Plus Button Section -->
+<div id="selectedRelatives" style="margin-top:12px; min-height:40px;"></div>
+<button type="button" id="addRelativeBtn" class="btn-main btn-primary-filled" style="width:100%; margin:12px 0; padding:12px; font-size:16px;" onclick="addSelectedRelative()">
+    ➕ Add Selected Relative
+</button>
+
+
 <div id="selectedRelatives" style="margin-top:12px;"></div>
 
-                <input type="hidden" id="editId">
-                <div class="btn-group">
-                    <button type="button" class="btn-main btn-ghost" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn-main btn-primary-filled">Save Member</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<input type="hidden" id="editId">
+<div class="btn-group">
+    <button type="button" class="btn-main btn-ghost" onclick="closeModal()">Cancel</button>
+    <button type="submit" class="btn-main btn-primary-filled">Save Member</button>
+</div>
+</div>
+</form>
+</div>
+</div>
 
     <div id="deleteModal" class="modal">
         <div class="modal-content" style="max-width: 400px; text-align: center;">
@@ -871,6 +982,111 @@ function toggleRelatives(id) {
     const el = document.getElementById('rel-' + id);
     el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
+
+// ✅ MOBILE-FRIENDLY RELATIVES SYSTEM
+
+
+function filterRelatives() {
+    const q = document.getElementById('relativeSearch').value.toLowerCase();
+    const select = document.getElementById('relativeSelect');
+    
+    select.innerHTML = allPersons
+        .filter(p => p.name.toLowerCase().includes(q) || p.family.toLowerCase().includes(q))
+        .slice(0, 10) // Mobile performance
+        .map(p => `<option value="${p.id}">${p.name} (${p.family})</option>`)
+        .join('');
+}
+
+function addSelectedRelative() {
+    const relation = document.getElementById('relationSelect').value;
+    const select = document.getElementById('relativeSelect');
+    const personId = select.value;
+    
+    if (!relation || !personId || !select.options.length) {
+        alert('⚠️ Please select a relation AND a relative first!');
+        return;
+    }
+    
+    const person = allPersons.find(p => p.id == personId);
+    if (!person) return;
+    
+    // Prevent self-reference
+    if (document.getElementById('editId').value && person.id == document.getElementById('editId').value) {
+        alert('⚠️ Cannot add yourself as relative!');
+        return;
+    }
+    
+    const relative = {
+        id: person.id,
+        name: person.name,
+        family: person.family,
+        relation: relation
+    };
+    
+    // Check for duplicates
+    if (selectedRelatives.some(r => r.id === relative.id)) {
+        alert('⚠️ Relative already added!');
+        return;
+    }
+    
+    selectedRelatives.push(relative);
+    renderSelectedRelatives();
+    
+    // Reset for next selection
+    document.getElementById('relationSelect').value = '';
+    document.getElementById('relativeSearch').value = '';
+    filterRelatives();
+}
+
+function renderSelectedRelatives() {
+    const container = document.getElementById('selectedRelatives');
+    if (selectedRelatives.length === 0) {
+        container.innerHTML = '<div style="color:#64748b; font-style:italic; padding:12px;">No relatives selected</div>';
+        return;
+    }
+    
+    container.innerHTML = selectedRelatives.map((r, i) => `
+        <div style="background:#e0f2fe; padding:12px; border-radius:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:14px;">
+            <span><strong>${r.relation}:</strong> ${r.name}</span>
+            <button type="button" onclick="removeRelative(${i})" style="background:#ef4444; color:white; border:none; border-radius:50%; width:28px; height:28px; font-size:16px; cursor:pointer;">×</button>
+        </div>
+    `).join('');
+}
+
+function removeRelative(i) {
+    selectedRelatives.splice(i, 1);
+    renderSelectedRelatives();
+}
+
+// ✅ Update openAddModal & editPerson to reset relatives
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add New Member';
+    document.getElementById('personForm').reset();
+    document.getElementById('editId').value = '';
+    selectedRelatives = []; // ✅ Reset
+    renderSelectedRelatives();
+    
+    if (currentSurname) document.getElementById('surname').value = currentSurname;
+    if (currentFamily) document.getElementById('family').value = currentFamily;
+    if (currentHouse) document.getElementById('house').value = currentHouse;
+    
+    document.getElementById('personModal').style.display = 'block';
+    filterRelatives(); // ✅ Refresh list
+}
+
+// ✅ Touch-friendly relatives toggle
+function toggleRelatives(id) {
+    const el = document.getElementById('rel-' + id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    
+    // Mobile: Auto-hide after tap
+    if (el.style.display === 'block') {
+        setTimeout(() => {
+            el.style.display = 'none';
+        }, 3000);
+    }
+}
+
 
 
 
