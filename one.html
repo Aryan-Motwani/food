@@ -461,6 +461,8 @@
             <option>Uncle</option>
             <option>Aunt</option>
             <option>Mama</option>
+            <option>Wife</option>
+            <option>Husband</option>
             <option>Mami</option>
         </select>
     </div>
@@ -525,42 +527,7 @@
 
         function initSampleData() {
     database = {
-        "Patel": {
-            "Sharma Family": {
-                "House A": [
-                    { 
-                        id: 1, surname: "Patel", firstname: "Raj", name: "Raj Patel", 
-                        gender: "Male", photo: "", dob: "1980-05-15", 
-                        house: "House A", family: "Sharma Family", 
-                        relation: "Husband",
-                        relatives: [  // ✅ Fixed: Array of OBJECTS
-                            { id: 2, name: "Priya Patel", family: "Sharma Family", relation: "Wife" }
-                        ] 
-                    },
-                    { 
-                        id: 2, surname: "Patel", firstname: "Priya", name: "Priya Patel", 
-                        gender: "Female", photo: "", dob: "1982-08-22", 
-                        house: "House A", family: "Sharma Family", 
-                        relation: "Wife",
-                        relatives: [  
-                            { id: 1, name: "Raj Patel", family: "Sharma Family", relation: "Husband" }
-                        ] 
-                    }
-                ],
-                "House B": [
-                    { 
-                        id: 3, surname: "Patel", firstname: "Amit", name: "Amit Patel", 
-                        gender: "Male", photo: "", dob: "2005-03-10", 
-                        house: "House B", family: "Sharma Family", 
-                        relation: "Son",
-                        relatives: [  // ✅ Fixed
-                            { id: 1, name: "Raj Patel", family: "Sharma Family", relation: "Father" },
-                            { id: 2, name: "Priya Patel", family: "Sharma Family", relation: "Mother" }
-                        ] 
-                    }
-                ]
-            }
-        }
+       
     };
     allPersons = flattenPersons(database);
 }
