@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Database Pro | Management</title>
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDEJcIitHnHgwyTzFwkT5lxOQp3Np71Dms",
+            authDomain: "tree-form-9835a.firebaseapp.com",
+            databaseURL: "https://tree-form-9835a-default-rtdb.firebaseio.com",
+            projectId: "tree-form-9835a",
+            storageBucket: "tree-form-9835a.firebasestorage.app",
+            messagingSenderId: "557591771590",
+            appId: "1:557591771590:web:3aa7bb4cd4f4b2df169ac7"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        window.db = firebase.firestore();
+    </script>
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 40px 20px;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        /* Header Section */
+        .header { 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        
+        .header-title h1 { 
+            font-size: 1.875rem; 
+            font-weight: 800; 
+            letter-spacing: -0.025em;
+            color: #0f172a;
+        }
+        .header-title p { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* Search & Navigation */
+        .top-tools {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .search-wrapper { position: relative; }
+        .search-input { 
+            width: 100%; 
+            padding: 14px 20px 14px 45px; 
+            border: 1px solid #e2e8f0; 
+            border-radius: var(--radius-md); 
+            font-size: 0.95rem;
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+        }
+        .search-input:focus { 
+            outline: none; 
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); 
+        }
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .breadcrumb { 
+            background: transparent; 
+            display: flex; 
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+        }
+        .breadcrumb span { 
+            cursor: pointer; 
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+        .breadcrumb span:hover { color: var(--primary); }
+        .breadcrumb span.current { color: var(--text-main); font-weight: 600; }
+
+        /* Content Area */
+        .content-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+            gap: 20px; 
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            text-align: center;
+            border: 1px solid #f1f5f9;
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .avatar-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+        .card p { color: var(--text-muted); font-size: 0.85rem; }
+
+        /* Person Specific Grid */
+        .person-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+        .person-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            box-shadow: var(--shadow);
+        }
+        .person-inner { padding: 24px; }
+        .person-top { display: flex; gap: 16px; align-items: center; margin-bottom: 20px; }
+        .person-img { 
+            width: 72px; height: 72px; 
+            border-radius: 50%; 
+            object-fit: cover;
+            border: 3px solid #f1f5f9;
+        }
+        .person-info h3 { font-size: 1.25rem; font-weight: 700; margin: 0; }
+        .person-info span { font-size: 0.85rem; color: var(--primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; }
+
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+            background: #f8fafc; 
+            padding: 16px; 
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+        }
+        .stat-item label { display: block; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+        .stat-item span { font-size: 0.9rem; font-weight: 600; }
+
+        .card-actions {
+            display: flex;
+            border-top: 1px solid #f1f5f9;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            background: transparent;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-edit { color: var(--primary); border-right: 1px solid #f1f5f9; }
+        .btn-edit:hover { background: #f5f3ff; }
+        .btn-delete { color: var(--danger); }
+        .btn-delete:hover { background: #fef2f2; }
+
+        /* Floating Action Button */
+        .add-btn { 
+            position: fixed; bottom: 40px; right: 40px; 
+            width: 60px; height: 60px; 
+            background: var(--primary);
+            color: white; border: none; border-radius: 50%; 
+            font-size: 24px; cursor: pointer; 
+            box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4); 
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        .add-btn:hover { transform: scale(1.1); background: var(--primary-hover); }
+
+        /* Modal Overhaul */
+        .modal { 
+            display: none; position: fixed; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(15, 23, 42, 0.6); 
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+        }
+        .modal-content { 
+            background: white; 
+            margin: 5vh auto; 
+            padding: 32px; 
+            border-radius: var(--radius-lg); 
+            width: 90%; max-width: 600px; 
+            box-shadow: var(--shadow-lg);
+        }
+        .modal-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 24px; 
+        }
+        .modal-header h2 { font-size: 1.5rem; font-weight: 700; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 6px; }
+        .form-group input, .form-group select { 
+            width: 100%; padding: 12px; 
+            border: 1px solid #e2e8f0; border-radius: 8px; 
+            font-size: 0.95rem;
+        }
+
+        .btn-group { display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; }
+        .btn-main { padding: 12px 24px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; }
+        .btn-primary-filled { background: var(--primary); color: white; }
+        .btn-ghost { background: #f1f5f9; color: var(--text-main); }
+
+        @media (max-width: 640px) {
+            .top-tools { grid-template-columns: 1fr; }
+            .person-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ✅ MOBILE SUPERCHARGED */
+@media (max-width: 768px) {
+    body { padding: 20px 10px; }
+    .container { max-width: 100%; }
+    
+    .header-title h1 { font-size: 1.5rem; }
+    .top-tools { grid-template-columns: 1fr; gap: 12px; }
+    
+    .content-grid { 
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+        gap: 12px; 
+    }
+    
+    .card { padding: 16px; }
+    .avatar-circle { width: 56px; height: 56px; font-size: 1.1rem; }
+    
+    .person-grid { grid-template-columns: 1fr; gap: 16px; }
+    .person-card { margin-bottom: 16px; }
+    
+    /* FAB Button Mobile */
+    .add-btn { 
+        width: 56px; height: 56px; 
+        bottom: 20px; right: 20px; 
+        font-size: 22px;
+    }
+    
+    /* Modal Mobile */
+    .modal-content { 
+        margin: 10px; width: calc(100% - 20px); 
+        padding: 24px 20px; 
+        max-height: 90vh; overflow-y: auto;
+    }
+    
+    /* Form Mobile */
+    .form-group input, .form-group select { 
+        font-size: 16px; /* Prevents zoom */
+        padding: 14px 12px;
+    }
+    
+    /* Touch Targets */
+    .action-btn, button { 
+        min-height: 44px; /* iOS Touch Target */
+        font-size: 16px;
+    }
+}
+
+/* Safe Area for iPhone Notch */
+@supports (padding: max(0px)) {
+    body { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+}
+
+/* ✅ FIX SAVE BUTTON - Mobile Critical */
+.btn-group { 
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 12px; 
+    margin-top: 32px;
+    position: sticky;      /* 🔑 NEW */
+    bottom: 0;             /* 🔑 NEW */
+    background: white;     /* 🔑 NEW */
+    padding: 16px 0;       /* 🔑 NEW */
+    border-top: 1px solid #f1f5f9; /* 🔑 NEW */
+    width: 100%;           /* 🔑 NEW */
+}
+
+.modal-content {
+    margin: 5vh auto; 
+    padding: 32px 32px 80px 32px;  /* ✅ Extra bottom padding */
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Mobile Button Safety */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: row;
+        position: fixed;        /* 🔑 MOBILE FIXED */
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 16px 20px;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+        z-index: 1001;
+        margin: 0;
+    }
+    
+    .modal-content {
+        padding-bottom: 120px;  /* Space for fixed button */
+        margin-bottom: 80px;
+    }
+    
+    /* Full-width buttons mobile */
+    .btn-main {
+        flex: 1;
+        min-height: 48px;
+        font-size: 16px;  /* Prevents zoom */
+    }
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Stats Toggle -->
+        <div class="header">
+            <div class="header-title">
+                <h1>Family Database Pro</h1>
+                <p id="statsText">Loading...</p>
+            </div>
+            <button id="aliveToggle" class="toggle-btn toggle-alive" onclick="toggleAliveFilter()">
+                ❤️ Only Alive (<span id="aliveCount">0</span>)
+            </button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div id="statsCards" class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalMembers">0</div>
+                <p class="stat-label">Total Members</p>
+            </div>
+            <div class="stat-card" style="background:linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                <div class="stat-number" id="totalMales">0</div>
+                <p class="stat-label">Males 👨</p>
+            </div>
+            <div class="stat-card" style="background:linear-gradient(135deg, #ec4899, #be185d);">
+                <div class="stat-number" id="totalFemales">0</div>
+                <p class="stat-label">Females 👩</p>
+            </div>
+            <div class="stat-card" style="background:linear-gradient(135deg, #f59e0b, #d97706);">
+                <div class="stat-number" id="totalFamilies">0</div>
+                <p class="stat-label">Families</p>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="top-tools">
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search by name, family, or house..." oninput="performSearch()">
+            </div>
+        </div>
+        
+        <div class="breadcrumb" id="breadcrumb">
+            <span class="current">🏠 Home</span>
+        </div>
+        
+        <div id="content" class="content-grid"></div>
+    </div>
+
+    <!-- FAB -->
+    <button class="add-btn" onclick="openAddModal()">+</button>
+
+    <!-- Add/Edit Modal -->
+    <div id="personModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Member</h2>
+                <button onclick="closeModal()" style="background:none; border:none; font-size: 24px; cursor:pointer">&times;</button>
+            </div>
+            <form id="personForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="firstname" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Surname</label>
+                        <input type="text" id="surname" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="gender" required>
+                            <option value="Male">👨 Male</option>
+                            <option value="Female">👩 Female</option>
+                            <option value="Other">⚧️ Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" id="dob">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>House</label>
+                        <input type="text" id="house" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Family</label>
+                        <input type="text" id="family" required>
+                    </div>
+                </div>
+                
+                <!-- Relation + Relative -->
+                <div style="display:grid; grid-template-columns: 1fr 2fr; gap:12px;">
+                    <div class="form-group">
+                        <label>Relation</label>
+                        <select id="relationSelect">
+                            <option value="">Select</option>
+                            <option>Father</option>
+                            <option>Mother</option>
+                            <option>Brother</option>
+                            <option>Sister</option>
+                            <option>Son</option>
+                            <option>Daughter</option>
+                            <option>Uncle</option>
+                            <option>Aunt</option>
+                            <option>Mama</option>
+                            <option>Mami</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Relative</label>
+                        <input type="text" id="relativeSearch" placeholder="🔍 Search relatives..." oninput="filterRelatives()">
+                        <select id="relativeSelect" size="3" style="width:100%; margin-top:4px; font-size:14px;"></select>
+                    </div>
+                </div>
+                <button type="button" id="addRelativeBtn" class="btn-main btn-primary-filled" style="width:100%; margin:12px 0; padding:12px; font-size:16px;" onclick="addSelectedRelative()">
+                    ➕ Add Selected Relative
+                </button>
+                <div id="selectedRelatives" style="margin-top:12px; min-height:40px;"></div>
+
+                <!-- Alive Toggle -->
+                <div class="form-group" style="grid-column: 1/-1;">
+                    <label style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" id="alive" checked style="width:18px; height:18px;">
+                        ❤️ Member is alive
+                    </label>
+                </div>
+
+                <input type="hidden" id="editId">
+            </form>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn-main btn-ghost" onclick="closeModal()">Cancel</button>
+            <button type="submit" form="personForm" class="btn-main btn-primary-filled">Save Member</button>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div style="font-size: 48px; color: var(--danger); margin-bottom: 16px;">⚠️</div>
+            <h2 style="margin-bottom: 8px;">Are you sure?</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px;">This will permanently remove <strong id="deleteName"></strong> from the database.</p>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn-main btn-ghost" style="flex:1" onclick="closeDeleteModal()">Cancel</button>
+                <button id="confirmDelete" class="btn-main btn-primary-filled" style="flex:1; background: var(--danger);">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global State
+        let database = {};
+        let allPersons = [];
+        let currentLevel = 0;
+        let currentSurname = null;
+        let currentFamily = null;
+        let currentHouse = null;
+        let searchResults = [];
+        let searchMode = false;
+        let showOnlyAlive = true;
+        let selectedRelatives = [];
+
+        // Init
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadDatabase();
+            if (Object.keys(database).length === 0) {
+                initSampleData();
+                await saveDatabase();
+            }
+            allPersons = flattenPersons(database);
+            updateStats();
+            showSurnames();
+        });
+
+        // Sample Data with Alive Field
+        function initSampleData() {
+            database = {
+                "Patel": {
+                    "Sharma Family": {
+                        "House A": [
+                            { 
+                                id: 1, surname: "Patel", firstname: "Raj", name: "Raj Patel", 
+                                gender: "Male", photo: "", dob: "1980-05-15", alive: true,
+                                house: "House A", family: "Sharma Family", 
+                                relation: "Husband",
+                                relatives: [{ id: 2, name: "Priya Patel", family: "Sharma Family", relation: "Wife" }]
+                            },
+                            { 
+                                id: 2, surname: "Patel", firstname: "Priya", name: "Priya Patel", 
+                                gender: "Female", photo: "", dob: "1982-08-22", alive: true,
+                                house: "House A", family: "Sharma Family", 
+                                relation: "Wife",
+                                relatives: [{ id: 1, name: "Raj Patel", family: "Sharma Family", relation: "Husband" }]
+                            },
+                            { 
+                                id: 3, surname: "Patel", firstname: "Grandma", name: "Grandma Patel", 
+                                gender: "Female", photo: "", dob: "1945-01-01", alive: false,
+                                house: "House A", family: "Sharma Family", 
+                                relation: "Grandmother",
+                                relatives: [{ id: 1, name: "Raj Patel", family: "Sharma Family", relation: "Grandson" }]
+                            }
+                        ],
+                        "House B": [
+                            { 
+                                id: 4, surname: "Patel", firstname: "Amit", name: "Amit Patel", 
+                                gender: "Male", photo: "", dob: "2005-03-10", alive: true,
+                                house: "House B", family: "Sharma Family", 
+                                relation: "Son",
+                                relatives: [
+                                    { id: 1, name: "Raj Patel", family: "Sharma Family", relation: "Father" },
+                                    { id: 2, name: "Priya Patel", family: "Sharma Family", relation: "Mother" }
+                                ] 
+                            }
+                        ]
+                    }
+                }
+            };
+            allPersons = flattenPersons(database);
+        }
+
+        function flattenPersons(db) {
+            let persons = [];
+            Object.values(db).forEach(families => {
+                Object.values(families).forEach(houseObj => {
+                    Object.values(houseObj).forEach(personList => {
+                        persons.push(...personList);
+                    });
+                });
+            });
+            return persons;
+        }
+
+        // Firebase
+        async function saveDatabase() {
+            try {
+                await window.db.collection('familyDatabase').doc('main').set(database);
+                allPersons = flattenPersons(database);
+                console.log('✅ Saved to Firebase');
+            } catch (error) {
+                console.error('❌ Save failed:', error);
+            }
+        }
+
+        async function loadDatabase() {
+            try {
+                const docSnap = await window.db.collection('familyDatabase').doc('main').get();
+                if (docSnap.exists) {
+                    database = docSnap.data();
+                    allPersons = flattenPersons(database);
+                    console.log('✅ Loaded from Firebase');
+                }
+            } catch (error) {
+                console.error('❌ Load failed:', error);
+            }
+        }
+
+        // Filter Functions
+        function getFilteredPersons(persons) {
+            if (showOnlyAlive) {
+                return persons.filter(p => p.alive !== false);
+            }
+            return persons;
+        }
+
+        // Stats
+        function updateStats() {
+            const alivePersons = allPersons.filter(p => p.alive !== false);
+            const filteredPersons = getFilteredPersons(allPersons);
+            
+            const males = filteredPersons.filter(p => p.gender === 'Male').length;
+            const females = filteredPersons.filter(p => p.gender === 'Female').length;
+            const families = new Set(filteredPersons.map(p => p.family)).size;
+            
+            document.getElementById('totalMembers').textContent = filteredPersons.length;
+            document.getElementById('totalMales').textContent = males;
+            document.getElementById('totalFemales').textContent = females;
+            document.getElementById('totalFamilies').textContent = families;
+            document.getElementById('aliveCount').textContent = alivePersons.length;
+            document.getElementById('statsText').textContent = `${filteredPersons.length} members • ${families} families (showing ${showOnlyAlive ? 'alive' : 'all'})`;
+        }
+
+        function toggleAliveFilter() {
+            showOnlyAlive = !showOnlyAlive;
+            const btn = document.getElementById('aliveToggle');
+            if (showOnlyAlive) {
+                btn.className = 'toggle-btn toggle-alive';
+                btn.innerHTML = '❤️ Only Alive (<span id="aliveCount">0</span>)';
+            } else {
+                btn.className = 'toggle-btn toggle-all';
+                btn.innerHTML = '💀 Show All (<span id="aliveCount">0</span>)';
+            }
+            updateStats();
+            
+            // Refresh current view
+            if (currentLevel === 0) showSurnames();
+            else if (currentLevel === 1 && currentSurname) showFamilies(currentSurname);
+            else if (currentLevel === 2 && currentSurname && currentFamily) showHouses(currentSurname, currentFamily);
+            else if (currentLevel === 3 && currentSurname && currentFamily && currentHouse) showPersons(currentSurname, currentFamily, currentHouse);
+        }
+
+        function createInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+        }
+
+        function showSurnames(filtered = null) {
+            currentLevel = 0;
+            searchMode = false;
+            updateBreadcrumb(['🏠 Home']);
+            const content = document.getElementById('content');
+            content.className = "content-grid";
+            let surnames = filtered || Object.keys(database);
+            
+            content.innerHTML = surnames.map(surname => {
+                let total = 0;
+                const families = database[surname] || {};
+                Object.values(families).forEach(family => {
+                    Object.values(family).forEach(house => {
+                        total += getFilteredPersons(house).length;
+                    });
+                });
+                
+                return `
+                    <div class="card" onclick="showFamilies('${surname}')">
+                        <div class="avatar-circle">${createInitials(surname)}</div>
+                        <h3>${surname}</h3>
+                        <p>${Object.keys(families).length} Families • ${total} Members</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showFamilies(surname) {
+            currentLevel = 1;
+            currentSurname = surname;
+            updateBreadcrumb(['🏠 Home', surname]);
+            const content = document.getElementById('content');
+            content.className = "content-grid";
+            const families = Object.keys(database[surname] || {});
+            
+            content.innerHTML = families.map(family => `
+                <div class="card" onclick="showHouses('${surname}', '${family}')">
+                    <div class="avatar-circle" style="background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%)">
+                        ${createInitials(family)}
+                    </div>
+                    <h3>${family}</h3>
+                    <p>${countPersonsInFamily(surname, family)} Members</p>
+                </div>
+            `).join('') + `
+                <div class="card" onclick="showSurnames()" style="border-style: dashed; background: transparent;">
+                    <div class="avatar-circle" style="background: #e2e8f0; color: #64748b">←</div>
+                    <h3>Back</h3>
+                    <p>To Surnames</p>
+                </div>`;
+        }
+
+        function countPersonsInFamily(surname, family) {
+            let count = 0;
+            const houses = database[surname][family] || {};
+            Object.values(houses).forEach(housePersons => {
+                count += getFilteredPersons(housePersons).length;
+            });
+            return count;
+        }
+
+        function showHouses(surname, family) {
+            currentLevel = 2;
+            currentSurname = surname;
+            currentFamily = family;
+            updateBreadcrumb(['🏠 Home', surname, family]);
+            const content = document.getElementById('content');
+            content.className = "content-grid";
+            const houses = Object.keys(database[surname][family] || {})
+                .filter(house => getFilteredPersons(database[surname][family][house] || []).length > 0)
+                .sort();
+
+            content.innerHTML = houses.map(house => {
+                const persons = getFilteredPersons(database[surname][family][house] || []);
+                return `
+                    <div class="card" onclick="showPersons('${surname}', '${family}', '${house}')">
+                        <div class="avatar-circle" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)">
+                            ${createInitials(house)}
+                        </div>
+                        <h3>${house}</h3>
+                        <p>${persons.length} Members</p>
+                    </div>
+                `;
+            }).join('') + `
+                <div class="card" onclick="showFamilies('${surname}')" style="border-style: dashed; background: transparent;">
+                    <div class="avatar-circle" style="background: #e2e8f0; color: #64748b">←</div>
+                    <h3>Back</h3>
+                    <p>To Families</p>
+                </div>`;
+        }
+
+        function showPersons(surname, family, house) {
+            currentLevel = 3;
+            currentSurname = surname;
+            currentFamily = family;
+            currentHouse = house;
+            updateBreadcrumb(['🏠 Home', surname, family, house]);
+            const content = document.getElementById('content');
+            content.className = "person-grid";
+            let persons = database[surname][family][house] || [];
+            persons = getFilteredPersons(persons);
+            
+            content.innerHTML = persons.map(person => {
+                const genderIcon = person.gender === 'Male' ? '👨' : person.gender === 'Female' ? '👩' : '⚧️';
+                const genderColor = person.gender === 'Male' ? 'var(--male)' : person.gender === 'Female' ? 'var(--female)' : 'var(--secondary)';
+                const aliveStatus = person.alive === false ? '<div style="color:var(--deceased); font-size:0.75rem; font-style:italic;">💀 Deceased</div>' : '';
+                
+                return `
+                    <div class="person-card">
+                        <div class="person-inner">
+                            <div class="person-top">
+                                <div class="avatar-circle" style="margin:0; width:50px; height:50px; font-size:1rem; background: linear-gradient(135deg, ${genderColor}20, ${genderColor}40);">
+                                    ${createInitials(person.name)}
+                                </div>
+                                <div class="person-info">
+                                    <span class="person-badge" style="background:${genderColor}20; color:${genderColor};">
+                                        ${genderIcon} ${person.relation || 'Member'}
+                                    </span>
+                                    ${aliveStatus}
+                                    <h3>${person.name}</h3>
+                                </div>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <label>Gender</label>
+                                    <span>${genderIcon} ${person.gender}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <label>Age</label>
+                                    <span>${person.dob ? calculateAge(person.dob) + ' yrs' : 'N/A'}</span>
+                                </div>
+                            </div>
+                            <button class="action-btn" onclick="toggleRelatives(${person.id})" style="width:100%; padding:12px; margin-bottom:16px;">
+                                👨‍👩‍👧 Relatives (${person.relatives?.length || 0})
+                            </button>
+                            <div id="rel-${person.id}" style="display:none; padding:16px; background:#f8fafc; border-radius:8px;">
+                                ${person.relatives?.map(r => `
+                                    <div style="cursor:pointer; padding:8px; border-radius:4px; margin-bottom:4px; background:white;" onclick="navigateToPerson(${r.id})">
+                                        <strong>${r.relation}</strong> – ${r.name} (${r.family})
+                                    </div>
+                                `).join('') || '<em style="color:var(--text-muted);">No relatives</em>'}
+                            </div>
+                        </div>
+                        <div style="display:flex; border-top:1px solid #f1f5f9;">
+                            <button class="action-btn btn-edit" onclick="editPerson(${person.id})" style="flex:1; border-right:1px solid #f1f5f9;">Edit</button>
+                            <button class="action-btn btn-delete" onclick="confirmDelete(${person.id}, '${person.name}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function calculateAge(dob) {
+            const birthDate = new Date(dob);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+            return age;
+        }
+
+        function updateBreadcrumb(items) {
+            const breadcrumb = document.getElementById('breadcrumb');
+            breadcrumb.innerHTML = items.map((item, index) => 
+                `<span onclick="navigateToLevel(${index})" class="${index === items.length-1 ? 'current' : ''}">${item}</span>`
+            ).join('<span style="color:#cbd5e1; padding: 0 4px;">/</span>');
+        }
+
+        function navigateToLevel(level) {
+            if (level === 0) showSurnames();
+            else if (level === 1 && currentSurname) showFamilies(currentSurname);
+            else if (level === 2 && currentSurname && currentFamily) showHouses(currentSurname, currentFamily);
+        }
+
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            if (query.length < 2) {
+                searchMode = false;
+                if (currentLevel === 0) showSurnames();
+                else if (currentLevel === 1 && currentSurname) showFamilies(currentSurname);
+                else if (currentLevel === 2 && currentSurname && currentFamily) showHouses(currentSurname, currentFamily);
+                else if (currentLevel === 3 && currentSurname && currentFamily && currentHouse) showPersons(currentSurname, currentFamily, currentHouse);
+                return;
+            }
+            
+            const matchingPersons = getFilteredPersons(allPersons).filter(person => 
+                person.name.toLowerCase().includes(query) ||
+                person.family.toLowerCase().includes(query) ||
+                person.house.toLowerCase().includes(query)
+            );
+            
+            const content = document.getElementById('content');
+            content.className = "content-grid";
+            
+            if (matchingPersons.length === 0) {
+                content.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px;">No results found.</div>`;
+                return;
+            }
+            
+            content.innerHTML = matchingPersons.map(person => `
+                <div class="card" onclick="navigateToPerson(${person.id})">
+                    <div class="avatar-circle" style="background: linear-gradient(135deg, ${person.gender === 'Male' ? 'var(--male)' : 'var(--female)'} 0%, ${person.gender === 'Male' ? '#1d4ed8' : '#be185d'} 100%)">
+                        ${createInitials(person.name)}
+                    </div>
+                    <h3>${person.name}</h3>
+                    <p>${person.family} • ${person.house} ${person.alive === false ? '💀' : '❤️'}</p>
+                </div>
+            `).join('');
+        }
+
+        function navigateToPerson(id) {
+            const person = allPersons.find(p => p.id === id);
+            if (person) {
+                currentSurname = person.surname;
+                currentFamily = person.family;
+                currentHouse = person.house;
+                showPersons(person.surname, person.family, person.house);
+            }
+        }
+
+        // Modal Functions
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Member';
+            document.getElementById('personForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('alive').checked = true;
+            selectedRelatives = [];
+            renderSelectedRelatives();
+            
+            if (currentSurname) document.getElementById('surname').value = currentSurname;
+            if (currentFamily) document.getElementById('family').value = currentFamily;
+            if (currentHouse) document.getElementById('house').value = currentHouse;
+            
+            document.getElementById('personModal').style.display = 'block';
+            filterRelatives();
+        }
+
+        function closeModal() { 
+            document.getElementById('personModal').style.display = 'none'; 
+        }
+
+        function closeDeleteModal() { 
+            document.getElementById('deleteModal').style.display = 'none'; 
+        }
+
+        // Relatives System
+        function filterRelatives() {
+            const q = document.getElementById('relativeSearch').value.toLowerCase();
+            const select = document.getElementById('relativeSelect');
+            
+            select.innerHTML = getFilteredPersons(allPersons)
+                .filter(p => p.name.toLowerCase().includes(q) || p.family.toLowerCase().includes(q))
+                .slice(0, 10)
+                .map(p => `<option value="${p.id}">${p.name} (${p.family}) ${p.alive === false ? '💀' : '❤️'}</option>`)
+                .join('');
+        }
+
+        function addSelectedRelative() {
+            const relation = document.getElementById('relationSelect').value;
+            const select = document.getElementById('relativeSelect');
+            const personId = select.value;
+            
+            if (!relation || !personId) {
+                alert('⚠️ Please select a relation AND a relative first!');
+                return;
+            }
+            
+            const person = allPersons.find(p => p.id == personId);
+            if (!person) return;
+            
+            if (document.getElementById('editId').value && person.id == document.getElementById('editId').value) {
+                alert('⚠️ Cannot add yourself as relative!');
+                return;
+            }
+            
+            const relative = {
+                id: person.id,
+                name: person.name,
+                family: person.family,
+                relation: relation
+            };
+            
+            if (selectedRelatives.some(r => r.id === relative.id)) {
+                alert('⚠️ Relative already added!');
+                return;
+            }
+            
+            selectedRelatives.push(relative);
+            renderSelectedRelatives();
+            
+            document.getElementById('relationSelect').value = '';
+            document.getElementById('relativeSearch').value = '';
+            filterRelatives();
+        }
+
+        function renderSelectedRelatives() {
+            const container = document.getElementById('selectedRelatives');
+            if (selectedRelatives.length === 0) {
+                container.innerHTML = '<div style="color:#64748b; font-style:italic; padding:12px;">No relatives selected</div>';
+                return;
+            }
+            
+            container.innerHTML = selectedRelatives.map((r, i) => `
+                <div style="background:#e0f2fe; padding:12px; border-radius:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:14px;">
+                    <span><strong>${r.relation}:</strong> ${r.name} (${r.family})</span>
+                    <button type="button" onclick="removeRelative(${i})" style="background:#ef4444; color:white; border:none; border-radius:50%; width:28px; height:28px; font-size:16px; cursor:pointer;">×</button>
+                </div>
+            `).join('');
+        }
+
+        function removeRelative(i) {
+            selectedRelatives.splice(i, 1);
+            renderSelectedRelatives();
+        }
+
+        function toggleRelatives(id) {
+            const el = document.getElementById('rel-' + id);
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Form Submit
+        document.getElementById('personForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = {
+                id: document.getElementById('editId').value ? parseInt(document.getElementById('editId').value) : Date.now(),
+                surname: document.getElementById('surname').value,
+                firstname: document.getElementById('firstname').value,
+                name: document.getElementById('firstname').value + ' ' + document.getElementById('surname').value,
+                gender: document.getElementById('gender').value,
+                dob: document.getElementById('dob').value,
+                alive: document.getElementById('alive').checked,
+                house: document.getElementById('house').value,
+                family: document.getElementById('family').value,
+                relation: document.getElementById('relationSelect').value,
+                relatives: [...selectedRelatives]
+            };
+
+            const surname = formData.surname;
+            if (!database[surname]) database[surname] = {};
+            if (!database[surname][formData.family]) database[surname][formData.family] = {};
+            if (!database[surname][formData.family][formData.house]) database[surname][formData.family][formData.house] = [];
+
+            if (document.getElementById('editId').value) {
+                updatePersonInDatabase(formData);
+            } else {
+                database[surname][formData.family][formData.house].push(formData);
+            }
+
+            await saveDatabase();
+            allPersons = flattenPersons(database);
+            updateStats();
+            closeModal();
+            if (currentHouse && currentFamily && currentSurname) {
+                showPersons(currentSurname, currentFamily, currentHouse);
+            }
+        });
+
+        function updatePersonInDatabase(person) {
+            for (let s in database) {
+                for (let f in database[s]) {
+                    for (let h in database[s][f]) {
+                        const idx = database[s][f][h].findIndex(p => p.id === person.id);
+                        if (idx > -1) {
+                            database[s][f][h].splice(idx, 1);
+                            if (!database[person.surname]) database[person.surname] = {};
+                            if (!database[person.surname][person.family]) database[person.surname][person.family] = {};
+                            if (!database[person.surname][person.family][person.house]) database[person.surname][person.family][person.house] = [];
+                            database[person.surname][person.family][person.house].push(person);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        function editPerson(id) {
+            const person = allPersons.find(p => p.id === id);
+            if (!person) return;
+            document.getElementById('modalTitle').textContent = 'Edit Member';
+            document.getElementById('surname').value = person.surname;
+            document.getElementById('firstname').value = person.firstname;
+            document.getElementById('gender').value = person.gender;
+            document.getElementById('dob').value = person.dob || '';
+            document.getElementById('house').value = person.house;
+            document.getElementById('family').value = person.family;
+            document.getElementById('relationSelect').value = person.relation || '';
+            document.getElementById('alive').checked = person.alive !== false;
+            document.getElementById('editId').value = person.id;
+            selectedRelatives = person.relatives ? [...person.relatives] : [];
+            renderSelectedRelatives();
+            document.getElementById('personModal').style.display = 'block';
+            filterRelatives();
+        }
+
+        function confirmDelete(id, name) {
+            document.getElementById('deleteName').textContent = name;
+            document.getElementById('confirmDelete').onclick = async () => {
+                const person = allPersons.find(p => p.id === id);
+                const list = database[person.surname][person.family][person.house];
+                const idx = list.findIndex(p => p.id === id);
+                list.splice(idx, 1);
+                await saveDatabase();
+                allPersons = flattenPersons(database);
+                updateStats();
+                closeDeleteModal();
+                showPersons(person.surname, person.family, person.house);
+            };
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                closeModal();
+                closeDeleteModal();
+            }
+        }
+    </script>
+</body>
+</html>
